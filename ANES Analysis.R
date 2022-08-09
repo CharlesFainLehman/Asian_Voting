@@ -72,8 +72,9 @@ stargazer(democrat_model1, democrat_model2, democrat_model3, democrat_model4,
                             c("Urbanization/Age", "No", "No", "Yes", "Yes", "No", "No", "Yes", "Yes"),
                             c("Religion", "No", "No", "No", "Yes", "No", "No", "No", "Yes")))
 
-### Analysis of only immigrants ###
+### Analysis of foreign and native-born Asians ###
 
+#constructing new ethnicity category
 anes.summary %>%
   mutate(Race.Eth.2 = factor(case_when(Foreign.Born == T & Race.Eth == "Asian" ~ "Foreign-Born Asian",
                                 Foreign.Born == F & Race.Eth == "Asian" ~ "Native-Born Asian",
@@ -93,7 +94,7 @@ fliberal_model4 <- glm(Liberal ~ Race.Eth.2 + Education + HH.Income + Religion +
 stargazer(fdemocrat_model1, fdemocrat_model2, fdemocrat_model3, fdemocrat_model4,
           fliberal_model1, fliberal_model2, fliberal_model3, fliberal_model4,
           type = 'html', out = "table2.html", 
-          title = "Table 2. Foreign vs. Native-Born Asian Odds (Compared to Whites)",
+          title = "Table 2. Foreign vs. Native-Born Asians (Compared to Whites)",
           dep.var.labels = c("Registered Democrat", "Ideological Liberal"),
           covariate.labels = c("Native-Born (N: 76)", "Foreign-Born (N: 121)"),
           keep = c("Asian"),
