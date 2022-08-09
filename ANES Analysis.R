@@ -2,6 +2,7 @@ require(tidyverse)
 require(stringr)
 require(stargazer)
 
+#make sure this file is downloaded + in the same directory, or substitute the relevant path and file
 anes <- read.csv("anes_timeseries_2020_csv_20220210.csv")
 
 #V200010b = weight (post)
