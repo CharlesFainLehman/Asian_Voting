@@ -15,7 +15,7 @@ anes <- read.csv("anes_timeseries_2020_csv_20220210.csv")
 #V201554 = national origin
 
 anes %>%
-  select(V200010b, V201018, V201200, V201549x, V201510, V201617x, V202355, V201435, V201507x) %>%
+  select(V200010b, V201018, V201200, V201549x, V201510, V201617x, V202355, V201435, V201507x, V201554) %>%
   filter(V201018 >= -1,
          V201200 > 0,
          V201200 < 99,
@@ -25,7 +25,8 @@ anes %>%
          V201617x > 0,
          V202355 > 0,
          V201435 > 0,
-         V201507x > -9) %>%
+         V201507x > -9,
+         V201554 > -9) %>%
   mutate(Weight = V200010b,
          Democrat = V201018 == 1,
          Liberal = V201200 %in% 1:3,
@@ -38,10 +39,12 @@ anes %>%
          HH.Income = factor(V201617x), #note linear
          Urbanization = factor(V202355, labels = c("Rural", "Small Town", "Suburb", "City")),
          Religion = factor(V201435),
-         Age = V201507x
+         Age = V201507x,
+         Foreign.Born = V201554 == 4
          ) %>%
-  select(!c(V200010b, V201018, V201200, V201549x, V201510, V201617x, V202355, V201435, V201507x)) -> anes.summary
+  select(!c(V200010b, V201018, V201200, V201549x, V201510, V201617x, V202355, V201435, V201507x, V201554)) -> anes.summary
 
+#### Analysis of full sample ####
 democrat_model1 <- glm(Democrat ~ Race.Eth, "binomial", anes.summary, weights = Weight)
 democrat_model2 <- glm(Democrat ~ Race.Eth + Education + HH.Income, "binomial", anes.summary, weights = Weight) 
 democrat_model3 <- glm(Democrat ~ Race.Eth + Education + HH.Income + Urbanization + Age, "binomial", anes.summary, weights = Weight)
@@ -55,8 +58,8 @@ liberal_model4 <- glm(Liberal ~ Race.Eth + Education + HH.Income + Religion + Ur
 #Writes the final regression table out as HTML
 stargazer(democrat_model1, democrat_model2, democrat_model3, democrat_model4,
           liberal_model1, liberal_model2, liberal_model3, liberal_model4,
-          type = 'html', out = "table.html", 
-          title = "Effects of Race/Ethnicity on Log Odds of Registration/Ideological ID",
+          type = 'html', out = "table1.html", 
+          title = "Table 1. Effect of Race on Registration/Ideology",
           dep.var.labels = c("Registered Democrat", "Ideological Liberal"),
           covariate.labels = c("Black", "Hispanic", "Asian", "AIAN", "Multiple Race", "Constant"),
           notes.label = "",
@@ -64,6 +67,41 @@ stargazer(democrat_model1, democrat_model2, democrat_model3, democrat_model4,
           notes.append = T,
           omit = c("Income|Education", "Urbanization|Age", "Religion"),
           omit.stat = c('aic', 'll'),
+          add.lines =  list(c('<td colspan="9" style="border-bottom: 1px solid black">Controls</td>'),
+                            c("Income/Education", "No", "Yes", "Yes", "Yes", "No", "Yes", "Yes", "Yes"),
+                            c("Urbanization/Age", "No", "No", "Yes", "Yes", "No", "No", "Yes", "Yes"),
+                            c("Religion", "No", "No", "No", "Yes", "No", "No", "No", "Yes")))
+
+### Analysis of only immigrants ###
+
+anes.summary %>%
+  mutate(Race.Eth.2 = factor(case_when(Foreign.Born == T & Race.Eth == "Asian" ~ "Foreign-Born Asian",
+                                Foreign.Born == F & Race.Eth == "Asian" ~ "Native-Born Asian",
+                                T ~ as.character(Race.Eth)),
+                             levels = c("White", "Black", "Hispanic", "Native-Born Asian", "Foreign-Born Asian", "AIAN", "Multiple"))) -> foreign.born.anes
+
+fdemocrat_model1 <- glm(Democrat ~ Race.Eth.2, "binomial", foreign.born.anes, weights = Weight)
+fdemocrat_model2 <- glm(Democrat ~ Race.Eth.2 + Education + HH.Income, "binomial", foreign.born.anes, weights = Weight) 
+fdemocrat_model3 <- glm(Democrat ~ Race.Eth.2 + Education + HH.Income + Urbanization + Age, "binomial", foreign.born.anes, weights = Weight)
+fdemocrat_model4 <- glm(Democrat ~ Race.Eth.2 + Education + HH.Income + Religion + Urbanization + Age, "binomial", foreign.born.anes, weights = Weight)
+
+fliberal_model1 <- glm(Liberal ~ Race.Eth.2, "binomial", foreign.born.anes, weights = Weight)
+fliberal_model2 <- glm(Liberal ~ Race.Eth.2 + Education + HH.Income, "binomial", foreign.born.anes, weights = Weight)
+fliberal_model3 <- glm(Liberal ~ Race.Eth.2 + Education + HH.Income + Urbanization + Age, "binomial", foreign.born.anes, weights = Weight)
+fliberal_model4 <- glm(Liberal ~ Race.Eth.2 + Education + HH.Income + Religion + Urbanization + Age, "binomial", foreign.born.anes, weights = Weight)
+
+stargazer(fdemocrat_model1, fdemocrat_model2, fdemocrat_model3, fdemocrat_model4,
+          fliberal_model1, fliberal_model2, fliberal_model3, fliberal_model4,
+          type = 'html', out = "table2.html", 
+          title = "Table 2. Foreign vs. Native-Born Asian Odds (Compared to Whites)",
+          dep.var.labels = c("Registered Democrat", "Ideological Liberal"),
+          covariate.labels = c("Native-Born (N: 76)", "Foreign-Born (N: 121)"),
+          keep = c("Asian"),
+          notes.label = "",
+          notes = c("Source: 2020 American National Election Study"),
+          notes.append = T,
+          omit = c("Income|Education", "Urbanization|Age", "Religion"),
+          omit.stat = c('aic', 'll', 'n'),
           add.lines =  list(c('<td colspan="9" style="border-bottom: 1px solid black">Controls</td>'),
                             c("Income/Education", "No", "Yes", "Yes", "Yes", "No", "Yes", "Yes", "Yes"),
                             c("Urbanization/Age", "No", "No", "Yes", "Yes", "No", "No", "Yes", "Yes"),
