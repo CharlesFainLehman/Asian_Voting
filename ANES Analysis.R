@@ -1,8 +1,6 @@
-library(tidyverse)
-library(stringr)
-library(broom) # for tidy()
-library(knitr) # for kable()
-library(stargazer)
+require(tidyverse)
+require(stringr)
+require(stargazer)
 
 anes <- read.csv("anes_timeseries_2020_csv_20220210.csv")
 
@@ -54,6 +52,7 @@ liberal_model2 <- glm(Liberal ~ Race.Eth + Education + HH.Income, "binomial", an
 liberal_model3 <- glm(Liberal ~ Race.Eth + Education + HH.Income + Urbanization + Age, "binomial", anes.summary, weights = Weight)
 liberal_model4 <- glm(Liberal ~ Race.Eth + Education + HH.Income + Religion + Urbanization + Age, "binomial", anes.summary, weights = Weight)
 
+#Writes the final regression table out as HTML
 stargazer(democrat_model1, democrat_model2, democrat_model3, democrat_model4,
           liberal_model1, liberal_model2, liberal_model3, liberal_model4,
           type = 'html', out = "table.html", 
