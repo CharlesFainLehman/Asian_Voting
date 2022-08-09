@@ -13,7 +13,7 @@ anes <- read.csv("anes_timeseries_2020_csv_20220210.csv")
 #V202355 = urbanization (post)
 #V201435 = religion (pre)
 #V201507x = age (pre)
-#V201554 = national origin
+#V201554 = national origin (pre)
 
 anes %>%
   select(V200010b, V201018, V201200, V201549x, V201510, V201617x, V202355, V201435, V201507x, V201554) %>%
